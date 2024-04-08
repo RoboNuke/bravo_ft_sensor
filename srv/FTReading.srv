@@ -1,0 +1,4 @@
+bool full_filter # full temporal, rotated and gravity compensated, if false just the avg/median filtered data
+---
+bool success
+Wrench reading
