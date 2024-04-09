@@ -2,7 +2,7 @@ import rospy
 import tf2_ros
 import tf.transformations as tr
 from geometry_msgs.msg import WrenchStamped, Wrench
-from bravo_ft_sensor.srv import FTReading
+from bravo_ft_sensor.srv import FTReading, FTReadingResponse
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class FTFilter:
         self.g_base_frame[:3] = np.array(rospy.get_param("/force_torque/gravity_base_frame", [0,0,-9.8]))[:3]
 
         # filtering stuff
-        self.sample_size = 10
+        self.sample_size = rospy.get_param("/force_torque/filter_sample_size", 10)
         self.sample_idx = 0
         self.raw = np.zeros((6,self.sample_size))
 
@@ -46,8 +46,10 @@ class FTFilter:
         w.torque.z = wren[5]
         return w
 
-    def getWorldToFrameTF(self, frame_name):
-        trans = self.tfBuffer.lookup_transform(self.base_frame, self.ft_frame, rospy.Time())
+    def getWorldToFrameTF(self, frame_name, just_trans_msg = False):
+        trans = self.tfBuffer.lookup_transform(self.base_frame, frame_name, rospy.Time())
+        if just_trans_msg:
+            return trans
         #print("Transform :", trans)
         p = np.array([trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z])
         q = np.array([trans.transform.rotation.x, trans.transform.rotation.y,
@@ -61,7 +63,6 @@ class FTFilter:
             q = q / norm
         g = tr.quaternion_matrix(q)
         g[0:3, -1] = p
-        #print(f"Transform matrix:\n{g}")
         return g
 
     def getFilterOutput(self):
@@ -95,6 +96,7 @@ class FTFilter:
         new = self.wrenchToNumpy(msg.wrench)
 
         self.raw[self.sample_idx, :] = new
+        self.sample_idx = (self.sample_idx + 1) % self.sample_size
         #print(f"Updated raw:{self.raw}")
         filtered_wrench = self.getFilterOutput()
 
@@ -118,9 +120,11 @@ class FTFilter:
             out[:3] -= (F + self.bias[:3])
             out[3:] -= (T + self.bias[3:])
         
-        req.reading = self.numpyToWrench(out)
-        req.success = True
-        return req
+        res = FTReadingResponse()
+        res.reading = self.numpyToWrench(out)
+        res.world_to_ft_frame = self.getWorldToFrameTF(self.ft_frame, True)
+        res.success = True
+        return res
         
     def spin(self):
         print("Force Torque Filter Node initialized")

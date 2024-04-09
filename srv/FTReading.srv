@@ -2,3 +2,4 @@ bool full_filter # full temporal, rotated and gravity compensated, if false just
 ---
 bool success
 geometry_msgs/Wrench reading
+geometry_msgs/Transform world_to_ft_frame

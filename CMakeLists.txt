@@ -12,7 +12,9 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   geometry_msgs
+  sensor_msgs
   message_generation
+  motion_primitives
 )
 
 ## System dependencies are found with CMake's conventions
@@ -163,6 +165,7 @@ include_directories(
 ## in contrast to setup.py, you can choose the destination
 catkin_install_python(PROGRAMS 
   scripts/ft_filter_node.py
+  scripts/calibration_node.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
