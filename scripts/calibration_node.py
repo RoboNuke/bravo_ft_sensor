@@ -1,10 +1,11 @@
 import rospy
 import tf.transformations as tr
-from bravo_ft_sensor.srv import FTReading
+from bravo_ft_sensor.srv import FTReading, Calibration, CalibrationResponse
 from sensor_msgs.msgs import JointState
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
+import yaml
 
 class FTCalibration:
     def __init__(self):
@@ -152,20 +153,46 @@ class FTCalibration:
 
         return gs
 
-    def fullCalibration(self):
+    def calibrationSRV(self, req):
         success, gts, fs, ts, jntAngles = self.getRawData()
         if not success:
-            return -1, -1, -1
-        # estimate gravity rotation
-        theta, rt = self.estGRot(gts, fs)
+            res = CalibrationResponse()
+            res.success = False
+            res.r_values = [-1.0, -1.0, -1.0]
+            return res
+        
+        if req.calibrate_rotation:
+            # estimate gravity rotation
+            theta, rt = self.estGRot(gts, fs)
+            # estimate mass and force bias
+            gs = self.rotGs(gts, theta) # rotated gts 
+        else:
+            theta = 0
+            rt = -1
+            gs = gts
+
         # estimate mass and force bias
-        gs = self.rotGs(gts, theta) # rotated gts 
         m, fBias, rm = self.estM(gs, fs)
+
         # estimate cog and torque bias
         cog, tBias, rcog = self.estCOG(gs, m, ts)
+        
         # store calibration
+        cali_data = {"m":m, "COG":cog, "Fbias":fBias, "Tbias":tBias, 
+                     "Theta":theta, "r_theta":rt, "r_m":rm, "r_cog":rcog}
+        with open(req.save_filepath + "/calibration_data.yaml", 'w') as file:
+            yaml.dump(cali_data, file)
+
         # store raw data
-        return rt, rm, rcog # quality of the 3 different regressions
+        raw_data = {"gravity_base_ft_frame":gts, "Forces":fs, "Torques":ts, "Joint_Angles":jntAngles}
+        with open(req.save_filepath + "/raw_data.yaml", 'r') as file:
+            yaml.dump(raw_data, file)
+
+        # respond
+        res = CalibrationResponse()
+        res.success = True
+        res.r_values = [rt, rm, rcog]
+        return res
     
     def spin(self):
         print("Force Torque Calibration Node initialized")

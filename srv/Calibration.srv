@@ -1,0 +1,5 @@
+bool calibrate_rotation
+string save_filepath
+---
+bool success
+float32[] r_values
