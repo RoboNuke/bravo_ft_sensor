@@ -75,7 +75,7 @@ class FTCalibration:
                 # get gravity in the pre-rotated ft sensor frame
                 Rw = self.getRotation(res.world_to_ft_frame)
                 g_raw_ft_frame = Rw @ self.g_base_frame
-                gts.append(g_raw_ft_frame)
+                gts.append(np.matrix(g_raw_ft_frame))
                 #print("\tcali Got data point")
         return True, gts, fs, ts, jntAngles
                 
@@ -158,7 +158,7 @@ class FTCalibration:
         R = np.matrix([[ct, -st, 0],[st, ct, 0],[0,0,1]])
         gs = np.zeros((len(gts), 3))
         for i, gt in enumerate(gts):
-            gs[i] = R * gt
+            gs[i,:3] = (R * gt.T).T
 
         return gs
 
@@ -170,6 +170,7 @@ class FTCalibration:
             res.r_values = [-1.0, -1.0, -1.0]
             return res
         
+        print(gts[0])
         if req.calibrate_rotation:
             # estimate gravity rotation
             theta, rt = self.estGRot(gts, fs)
@@ -187,20 +188,30 @@ class FTCalibration:
         cog, tBias, rcog = self.estCOG(gs, m, ts)
         
         # store calibration
-        cali_data = {"m":m, "COG":cog, "Fbias":fBias, "Tbias":tBias, 
-                     "Theta":theta, "r_theta":rt, "r_m":rm, "r_cog":rcog}
+        print(type(theta), type(rt), type(rm), type(rcog))
+        cali_data = {"m":m, "COG":cog.tolist(), "Fbias":fBias.tolist(), "Tbias":tBias.tolist(), 
+                     "Theta":theta, "r_theta":float(rt), "r_m":float(rm), "r_cog":float(rcog)}
         with open(req.save_filepath + "/calibration_data.yaml", 'w') as file:
             yaml.dump(cali_data, file)
 
         # store raw data
         raw_data = {"gravity_base_ft_frame":gts, "Forces":fs, "Torques":ts, "Joint_Angles":jntAngles}
-        with open(req.save_filepath + "/raw_data.yaml", 'r') as file:
+        with open(req.save_filepath + "/raw_data.yaml", 'w') as file:
             yaml.dump(raw_data, file)
 
         # respond
         res = CalibrationResponse()
         res.success = True
         res.r_values = [rt, rm, rcog]
+
+
+        print(f"Theta:{theta} with r=", "{:.5f}".format(rt))
+        print(f"Mass:{m} with r=", "{:.5f}".format(rm))
+        print(f"fBias:{fBias} with r=", "{:.5f}".format(rm))
+        print(f"COG:{cog} with r=", "{:.5f}".format(rcog))
+        print(f"tBias:{tBias} with r=", "{:.5f}".format(rcog))
+
+
         return res
     
     def spin(self):
