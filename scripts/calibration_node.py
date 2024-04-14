@@ -69,9 +69,9 @@ class FTCalibration:
                 #print("cali", res)
                 # store filtered (mean/median) force torque reading
                 f = res.reading.force
-                fs.append(np.array([ f.x, f.y, f.z]))
+                fs.append(np.matrix([ f.x, f.y, f.z]))
                 t = res.reading.torque
-                ts.append(np.array([t.x, t.y, t.z]))
+                ts.append(np.matrix([t.x, t.y, t.z]))
                 # get gravity in the pre-rotated ft sensor frame
                 Rw = self.getRotation(res.world_to_ft_frame)
                 g_raw_ft_frame = Rw @ self.g_base_frame
@@ -87,8 +87,8 @@ class FTCalibration:
 
     def getRotLS(self, gt):
         # transformed gravity vector
-        gx = float(gt[0])
-        gy = float(gt[1])
+        gx = float(gt[0,0])
+        gy = float(gt[0,1])
         A = np.array([[gx, -gy],[gy, gx]])
         return A
 
@@ -97,11 +97,8 @@ class FTCalibration:
         A = np.zeros((len(gts) * 2, 2))
         B = np.zeros((2*len(gts), 1))
         for i, gt in enumerate(gts):
-            print(gt)
             A[i*2:i*2+2, :] = self.getRotLS(gt)
-            B[i*2, 0] = fs[i][0]
-            B[i*2+1, 0] = fs[i][1]
-            #B[i*2:i*2+2, :] = fs[i][:2].T
+            B[i*2:i*2+2, :] = fs[i][0,:2].T
         
         vals, r = self.LS(A,B)
         ct = float(vals[:,0])
@@ -149,7 +146,7 @@ class FTCalibration:
         B = np.zeros( (3*len(gs), 1) )
         for i, g in enumerate(gs):
             A[3*i:3*i+3, :] = self.getTorqueLS(g, m)
-            B[3*i:3*i+3, 0] = ts[i][0,:].T
+            B[3*i:3*i+3, :] = ts[i][0,:].T
         vals, r = self.LS(A,B)
         cog = vals[:,:3]
         Tbias = vals[:,3:]
@@ -250,10 +247,13 @@ def test():
         #print(F,T)
         gt = Rw * g
         #print("Gt:\n", gt)
-        gts.append(gt)
+        gts.append(gt.T)
         Fs.append(F)
-        Ts.append(T)
-
+        Ts.append(np.matrix(T))
+    print(type(gts[0]), type(Fs[0]), type(Ts[0]))
+    print (gts[0])
+    print(Fs[0])
+    print(Ts[0])
     # estimate theta 
     cali = FTCalibration()
     theta_est, r = cali.estGRot(gts, Fs)
@@ -264,7 +264,7 @@ def test():
     R_est = np.matrix([[ct, -st, 0],[st, ct, 0],[0,0,1]])
     gtrs = []
     for g in gts:
-        gtrs.append(R_est * g)
+        gtrs.append(R_est * g.T)
 
     m_est, Fbias_est, rm = cali.estM(gtrs, Fs)
     print(f"M est:", "{:.2f}".format(m_est), f"actual:{m} with r=", "{:.5f}".format(rm))
@@ -272,12 +272,13 @@ def test():
 
     cog_est, Tbias_est, rt = cali.estCOG(gtrs, m_est, Ts)
     print(f"COG est:{cog_est}, actual:{cog} with r=", "{:.5f}".format(rt))
-    print(f"M est:{Tbias_est}, actual:{tBias} with r=", "{:.5f}".format(rt))
+    print(f"Tbias est:{Tbias_est}, actual:{tBias} with r=", "{:.5f}".format(rt))
 
 
 if __name__=="__main__":
     rospy.init_node("ft_calibration_node")
     FTC = FTCalibration()
+    #test()
     FTC.spin()
 
 
