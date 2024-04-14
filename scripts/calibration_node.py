@@ -1,7 +1,7 @@
 import rospy
 import tf.transformations as tr
 from bravo_ft_sensor.srv import FTReading, Calibration, CalibrationResponse
-from sensor_msgs.msgs import JointState
+from sensor_msgs.msg import JointState
 
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -12,20 +12,25 @@ class FTCalibration:
         self.g_base_frame = np.array(rospy.get_param("/force_torque/gravity_base_frame", [0,0,-9.8]))
         self.required_cali_pts = np.array(rospy.get_param("/force_torque/required_pts_for_calibration", 25))
         # set up ft reading
-        rospy.wait_for_service('force_torque_reading')
+        print("FT Calibration: Waiting for service")
+        rospy.wait_for_service('/force_torque_reading')
         try:
-            self.get_ft_reading = rospy.ServiceProxy("force_torque_reading", FTReading)
+            self.get_ft_reading = rospy.ServiceProxy("/force_torque_reading", FTReading)
         except rospy.ServiceException as e:
             print("Issues with ft_reading service")
         
         # set up joint_state sub
         self.joint_angles = []
         self.joint_state_sub = rospy.Subscriber("/joint_state", JointState, self.joint_cb)
+        
+        self.get_reading_srv = rospy.Service("/ft_calibration", Calibration, self.calibrationSRV)
+
 
     def joint_cb(self, msg):
         self.joint_angles = msg.position
 
     def getRotation(self, trans):
+        #print("cali", trans)
         p = np.array([trans.transform.translation.x, trans.transform.translation.y, trans.transform.translation.z])
         q = np.array([trans.transform.rotation.x, trans.transform.rotation.y,
                   trans.transform.rotation.z, trans.transform.rotation.w])
@@ -58,7 +63,10 @@ class FTCalibration:
             else:
                 # store angles
                 jntAngles.append(self.joint_angles)
+                #print("cali", "Getting res")
                 res = self.get_ft_reading(False)
+                #print("\tcali Got ft reading")
+                #print("cali", res)
                 # store filtered (mean/median) force torque reading
                 f = res.reading.force
                 fs.append(np.array([ f.x, f.y, f.z]))
@@ -68,6 +76,7 @@ class FTCalibration:
                 Rw = self.getRotation(res.world_to_ft_frame)
                 g_raw_ft_frame = Rw @ self.g_base_frame
                 gts.append(g_raw_ft_frame)
+                #print("\tcali Got data point")
         return True, gts, fs, ts, jntAngles
                 
     
@@ -88,8 +97,11 @@ class FTCalibration:
         A = np.zeros((len(gts) * 2, 2))
         B = np.zeros((2*len(gts), 1))
         for i, gt in enumerate(gts):
+            print(gt)
             A[i*2:i*2+2, :] = self.getRotLS(gt)
-            B[i*2:i*2+2, :] = fs[i][0,:2].T
+            B[i*2, 0] = fs[i][0]
+            B[i*2+1, 0] = fs[i][1]
+            #B[i*2:i*2+2, :] = fs[i][:2].T
         
         vals, r = self.LS(A,B)
         ct = float(vals[:,0])
@@ -147,7 +159,7 @@ class FTCalibration:
         ct = np.cos(theta)
         st = np.sin(theta)
         R = np.matrix([[ct, -st, 0],[st, ct, 0],[0,0,1]])
-        gs = np.zeros(gts)
+        gs = np.zeros((len(gts), 3))
         for i, gt in enumerate(gts):
             gs[i] = R * gt
 

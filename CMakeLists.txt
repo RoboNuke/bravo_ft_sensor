@@ -14,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
   sensor_msgs
   message_generation
-  motion_primitives
+  #motion_primitives
 )
 
 ## System dependencies are found with CMake's conventions
@@ -61,6 +61,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
    FILES
    FTReading.srv
+   Calibration.srv
 )
 
 ## Generate actions in the 'action' folder

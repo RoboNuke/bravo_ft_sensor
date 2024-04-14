@@ -2,12 +2,19 @@
 
     <!--include file="$(find bpl_bravo_description_real)/launch/view_bravo_7.launch" /-->
 
-    <!--rosparam command="load" 
+    <rosparam command="load" 
             file="$(find bpl_bravo_description_real)/config/default_calibration.yaml" 
             /> 
 
-    <node name="ft_filterer" pkg="bravo_ft_sensor" type="ft_filter_node.py" output="screen"/-->
-    <node name="ft_calibrator" pkg="bravo_ft_sensor" type="calibration_node.py" output="screen"/>
+    <node name="ft_filterer" pkg="bravo_ft_sensor" 
+        type="ft_filter_node.py" 
+        ns="bravo" 
+        output="screen"/>
+
+    <node name="ft_calibrator" pkg="bravo_ft_sensor" 
+        type="calibration_node.py" 
+        ns="bravo"
+        output="screen"/>
 
 
 

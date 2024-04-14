@@ -122,8 +122,12 @@ class FTFilter:
         
         res = FTReadingResponse()
         res.reading = self.numpyToWrench(out)
+        x = self.getWorldToFrameTF(self.ft_frame, True)
+        #print(x)
         res.world_to_ft_frame = self.getWorldToFrameTF(self.ft_frame, True)
+        #print(res.world_to_ft_frame)
         res.success = True
+        #print("Returning srv in filter")
         return res
         
     def spin(self):
@@ -134,8 +138,9 @@ import time
 if __name__=="__main__":
     rospy.init_node("ft_filter_node")
     FTF = FTFilter()
-    np.set_printoptions(precision=3, suppress=True)
-    time.sleep(3)
+    
+    #np.set_printoptions(precision=3, suppress=True)
+    #time.sleep(3)
     """
     Test calibration data:
         force_torque:
@@ -149,6 +154,7 @@ if __name__=="__main__":
         base_frame: "world"
         filter_type: "median"
         gravity_base_frame: [1,2,-3.0]
+    """
     """
     FTF.raw = np.array([[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6],[1,2,3,4,5,6]])
     FTF.filter_type = "mean"
@@ -171,5 +177,5 @@ if __name__=="__main__":
     print(f"Partial srv call:{FTF.getReadingSrv(test_req).reading}")
     test_req.full_filter = True
     print(f"Full srv call:{FTF.getReadingSrv(test_req).reading}")
-    
+    """
     FTF.spin()
