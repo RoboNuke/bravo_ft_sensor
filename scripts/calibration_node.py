@@ -13,7 +13,7 @@ class FTCalibration:
         self.required_cali_pts = np.array(rospy.get_param("/force_torque/required_pts_for_calibration", 25))
         # set up ft reading
         print("FT Calibration: Waiting for service")
-        rospy.wait_for_service('/force_torque_reading')
+        #rospy.wait_for_service('/force_torque_reading')
         try:
             self.get_ft_reading = rospy.ServiceProxy("/force_torque_reading", FTReading)
         except rospy.ServiceException as e:
@@ -51,7 +51,7 @@ class FTCalibration:
         ts = [] # list of torque readings
         # while not enough points
         while len(jntAngles) < self.required_cali_pts:
-            inny = input("Ready to take data sample? (q) to quit, (b) remove last data point\t")
+            inny = input(f"Ready to take ({len(jntAngles)}/{self.required_cali_pts} data sample? (q) to quit, (b) remove last data point\t")
             if inny == "q":
                 return False, None, None, None, None
             elif inny == "b":
@@ -72,6 +72,7 @@ class FTCalibration:
                 fs.append(np.matrix([ f.x, f.y, f.z]))
                 t = res.reading.torque
                 ts.append(np.matrix([t.x, t.y, t.z]))
+                print(f"\tGot raw reading:{fs[-1]}, and {ts[-1]}")
                 # get gravity in the pre-rotated ft sensor frame
                 Rw = self.getRotation(res.world_to_ft_frame)
                 g_raw_ft_frame = Rw @ self.g_base_frame
@@ -213,7 +214,18 @@ class FTCalibration:
 
 
         return res
-    
+
+    def readRawData(self, fp):
+        print(fp+"/raw_data.yaml")
+        with open(fp + "/raw_data.yaml", 'r') as file:
+            raw_data = yaml.load(file, Loader=yaml.Loader)
+
+        for thing in raw_data:
+            print(f"Another Thing:{thing}")
+            for val in raw_data[thing]:
+                print(f"\t{val}")
+
+
     def spin(self):
         print("Force Torque Calibration Node initialized")
         rospy.spin()
@@ -289,8 +301,9 @@ def test():
 if __name__=="__main__":
     rospy.init_node("ft_calibration_node")
     FTC = FTCalibration()
+    FTC.readRawData("/home/hunter/catkin_ws")
     #test()
-    FTC.spin()
+    #FTC.spin()
 
 
         

@@ -9,8 +9,6 @@ import numpy as np
 
 class FTFilter:
     def __init__(self):
-        self.raw_sub = rospy.Subscriber("/raw_force_torque", WrenchStamped, self.rawCB)
-        self.filt_pub = rospy.Publisher("/filtered_force_torque", WrenchStamped, queue_size=1)
 
         self.get_reading_srv = rospy.Service("/force_torque_reading", FTReading, self.getReadingSrv)
 
@@ -32,6 +30,9 @@ class FTFilter:
         # tf stuff
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
+        
+        self.raw_sub = rospy.Subscriber("/raw_force_torque", WrenchStamped, self.rawCB)
+        self.filt_pub = rospy.Publisher("/filtered_force_torque", WrenchStamped, queue_size=1)
 
     def wrenchToNumpy(self, wren):
         return np.array([wren.force.x, wren.force.y, wren.force.z, wren.torque.x, wren.torque.y, wren.torque.z])
