@@ -10,7 +10,7 @@ import numpy as np
 class FTFilter:
     def __init__(self):
 
-        self.get_reading_srv = rospy.Service("/force_torque_reading", FTReading, self.getReadingSrv)
+        self.get_reading_srv = rospy.Service("force_torque_reading", FTReading, self.getReadingSrv)
 
         self.frame_angle = rospy.get_param("/force_torque/frame_angle", 0.0)
         self.cog =  np.array(rospy.get_param("/force_torque/ee_cog", np.array([0,0,0.0])))
@@ -25,14 +25,14 @@ class FTFilter:
         # filtering stuff
         self.sample_size = rospy.get_param("/force_torque/filter_sample_size", 10)
         self.sample_idx = 0
-        self.raw = np.zeros((6,self.sample_size))
+        self.raw = np.zeros((self.sample_size,6))
 
         # tf stuff
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
         
-        self.raw_sub = rospy.Subscriber("/raw_force_torque", WrenchStamped, self.rawCB)
-        self.filt_pub = rospy.Publisher("/filtered_force_torque", WrenchStamped, queue_size=1)
+        self.raw_sub = rospy.Subscriber("raw_force_torque", WrenchStamped, self.rawCB)
+        self.filt_pub = rospy.Publisher("filtered_force_torque", WrenchStamped, queue_size=1)
 
     def wrenchToNumpy(self, wren):
         return np.array([wren.force.x, wren.force.y, wren.force.z, wren.torque.x, wren.torque.y, wren.torque.z])
@@ -94,15 +94,16 @@ class FTFilter:
         return out
     
     def rawCB(self, msg):
-        new = self.wrenchToNumpy(msg.wrench)
+        new = self.wrenchToNumpy(msg.wrench).T
 
+        #print(self.raw.shape, new.shape, self.raw[0,:].shape)
         self.raw[self.sample_idx, :] = new
         self.sample_idx = (self.sample_idx + 1) % self.sample_size
         #print(f"Updated raw:{self.raw}")
         filtered_wrench = self.getFilterOutput()
 
         F,T = self.getGravityFT()
-
+        print(f"Gravity: {F}, {T} Bias:{self.bias}")
         #print(f"Filtered Wrench {filtered_wrench}")
         filtered_wrench[:3] -= (F + self.bias[:3])
         filtered_wrench[3:] -= (T + self.bias[3:])
@@ -110,7 +111,7 @@ class FTFilter:
 
         out = self.getStampedWrench(filtered_wrench)
 
-        print("Final Output:\n", out)
+        #print("Final Output:\n", out)
         self.filt_pub.publish(out)
 
     def getReadingSrv(self, req):
@@ -138,9 +139,9 @@ class FTFilter:
 import time
 if __name__=="__main__":
     rospy.init_node("ft_filter_node")
+    np.set_printoptions(precision=3, suppress=True)
     FTF = FTFilter()
     
-    #np.set_printoptions(precision=3, suppress=True)
     #time.sleep(3)
     """
     Test calibration data:

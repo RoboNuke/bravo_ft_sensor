@@ -13,9 +13,9 @@ class FTCalibration:
         self.required_cali_pts = np.array(rospy.get_param("/force_torque/required_pts_for_calibration", 25))
         # set up ft reading
         print("FT Calibration: Waiting for service")
-        #rospy.wait_for_service('/force_torque_reading')
+        rospy.wait_for_service('force_torque_reading')
         try:
-            self.get_ft_reading = rospy.ServiceProxy("/force_torque_reading", FTReading)
+            self.get_ft_reading = rospy.ServiceProxy("force_torque_reading", FTReading)
         except rospy.ServiceException as e:
             print("Issues with ft_reading service")
         
@@ -23,7 +23,7 @@ class FTCalibration:
         self.joint_angles = []
         self.joint_state_sub = rospy.Subscriber("/joint_state", JointState, self.joint_cb)
         
-        self.get_reading_srv = rospy.Service("/ft_calibration", Calibration, self.calibrationSRV)
+        self.get_reading_srv = rospy.Service("ft_calibration", Calibration, self.calibrationSRV)
 
 
     def joint_cb(self, msg):
@@ -301,9 +301,9 @@ def test():
 if __name__=="__main__":
     rospy.init_node("ft_calibration_node")
     FTC = FTCalibration()
-    FTC.readRawData("/home/hunter/catkin_ws")
+    #FTC.readRawData("/home/hunter/catkin_ws")
     #test()
-    #FTC.spin()
+    FTC.spin()
 
 
         
