@@ -167,6 +167,7 @@ include_directories(
 catkin_install_python(PROGRAMS 
   scripts/ft_filter_node.py
   scripts/calibration_node.py
+  scripts/ft_demo.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

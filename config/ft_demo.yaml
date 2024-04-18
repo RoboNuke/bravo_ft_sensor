@@ -1,0 +1,8 @@
+
+ft_demo:
+  force_torque_topic: "/bravo/filtered_force_torque"
+  ee_control_topic: "/bravo/servo_server/delta_twist_cmds"
+  ee_frame: "bravo_base_link"
+
+  gains: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+  ignore_threshold: [10, 10, 10, 1, 1, 1]

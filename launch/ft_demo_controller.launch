@@ -1,0 +1,26 @@
+<!-- A top-level launch file to start the RobotHW interface, MoveIt, MoveIt Servo, and RViz -->
+
+<launch>
+    <include file="$(find bravo_arm_sw)/launch/bravo_arm.launch">
+        <arg  name="use_ps4_controller" value="false"/>
+        <arg  name="with_trisect" value="false"/>
+        <arg  name="start_rviz" value="true"/>
+        <arg  name="with_base_hand" value="false"/>
+        <arg  name="with_rigid_peg" value="false"/>
+        <arg  name="with_moveit_servo" value="true"/>
+        <arg  name="simulated" value="true"/>
+    </include>
+
+    <include file="$(find bravo_ft_sensor)/launch/ft_grav_comp.launch">
+        <arg name="calibrate" value="false"/>
+    </include>
+
+    <rosparam command="load" 
+            file="$(find bravo_ft_sensor)/config/ft_demo.yaml" 
+            ns="bravo"
+    />
+     
+    <node name="ft_demo_controller" pkg="bravo_ft_sensor" type="ft_demo.py"
+            ns="bravo"
+            launch-prefix="xterm -hold -e"/> 
+  </launch>
