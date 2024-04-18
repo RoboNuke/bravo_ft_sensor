@@ -103,7 +103,7 @@ class FTFilter:
         filtered_wrench = self.getFilterOutput()
 
         F,T = self.getGravityFT()
-        print(f"Gravity: {F}, {T} Bias:{self.bias}")
+        #print(f"Gravity: {F}, {T} Bias:{self.bias}")
         #print(f"Filtered Wrench {filtered_wrench}")
         filtered_wrench[:3] -= (F + self.bias[:3])
         filtered_wrench[3:] -= (T + self.bias[3:])

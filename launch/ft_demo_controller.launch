@@ -8,7 +8,7 @@
         <arg  name="with_base_hand" value="false"/>
         <arg  name="with_rigid_peg" value="false"/>
         <arg  name="with_moveit_servo" value="true"/>
-        <arg  name="simulated" value="true"/>
+        <arg  name="simulated" value="false"/>
     </include>
 
     <include file="$(find bravo_ft_sensor)/launch/ft_grav_comp.launch">

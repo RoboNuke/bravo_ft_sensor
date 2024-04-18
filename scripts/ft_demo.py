@@ -16,6 +16,8 @@ class FTDemoController:
                             [0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
         self.threshs = rospy.get_param("ft_demo/ignore_threshold",
                                        [10.0, 10.0, 10.0, 1.0, 1.0, 1.0])
+        self.maxs = rospy.get_param("ft_demo/max_speeds",
+                                       [0.5, 0.5, 0.5, 0.25, 0.25, 0.25])
         
         # set up service to toggle
         self.toggle_srv = rospy.Service("toggle_ft_demo_controller", 
@@ -50,18 +52,28 @@ class FTDemoController:
 
     def ftCB(self, msg):
         if not self.active:
-            print("Not Active")
             return
-        print("Active")
         f = msg.wrench.force
         t = msg.wrench.torque
         ft = [f.x, f.y, f.z,
               t.x, t.y, t.z]
         
-        e = [ self.Ks[i]*ft[i] if fabs(ft[i]) > self.threshs[i] else 0 for i in range(6)]
+        vel = []
+        for i in range(6):
+            e = ft[i] if fabs(ft[i]) > self.threshs[i] else 0.0
+            if e > 0.000001:
+                e -= self.threshs[i]
+            elif e < -0.000001:
+                e += self.threshs[i]
+            e*=self.Ks[i]
+            e = min(self.maxs[i], max(-self.maxs[i], e))
+            vel.append(e)
+
+            
+
         out = TwistStamped()
 
-        out.twist = self.toTwist(e)
+        out.twist = self.toTwist(vel)
         out.header.frame_id = self.ee_frame
         out.header.stamp = rospy.Time.now()
         print("e:", e)

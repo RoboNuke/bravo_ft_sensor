@@ -171,7 +171,7 @@ class FTCalibration:
             res.r_values = [-1.0, -1.0, -1.0]
             return res
         
-        print(gts[0])
+        #print(gts[0])
         if req.calibrate_rotation:
             # estimate gravity rotation
             theta, rt = self.estGRot(gts, fs)
