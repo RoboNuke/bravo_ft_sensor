@@ -19,8 +19,8 @@ class FTSafetyReporter():
         self.tfBuffer = tf2_ros.Buffer()
         self.tfListener = tf2_ros.TransformListener(self.tfBuffer)
 
-        self.ft_sub = rospy.Subscriber("filtered_force_torque", WrenchStamped, self.ftSensorCB)
-        self.interrupt_pub = rospy.Publisher("ft_sensor_interrupt", FT_Interrupt, queue_size=1)
+        self.ft_sub = rospy.Subscriber(self.ft_topic, WrenchStamped, self.ftSensorCB)
+        self.interrupt_pub = rospy.Publisher(self.interrupt_topic, FT_Interrupt, queue_size=1)
 
     def wrenchToNumpy(self, wren):
         npy = np.zeros((6,))
@@ -47,9 +47,10 @@ class FTSafetyReporter():
                     safe = False
                     break
 
+        out_msg = FT_Interrupt()
+        out_msg.is_safe = safe
+        out_msg.sensor_reading = msg.wrench
         if not safe:
-            out_msg = FT_Interrupt()
-            out_msg.sensor_reading = msg.wrench
 
             # move wrench to recovery  frame
             tfWren = self.tfWrench(wren, msg.header.frame_id)
@@ -66,7 +67,7 @@ class FTSafetyReporter():
             out_msg.recovery_direction.angular.y = -tTwist[1]
             out_msg.recovery_direction.angular.z = -tTwist[2]
 
-            self.interrupt_pub.publish(out_msg)
+        self.interrupt_pub.publish(out_msg)
 
 
 

@@ -1,2 +1,3 @@
+bool is_safe
 geometry_msgs/Wrench sensor_reading
 geometry_msgs/Twist recovery_direction

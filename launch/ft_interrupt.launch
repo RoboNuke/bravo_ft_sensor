@@ -1,0 +1,13 @@
+<launch>
+    <rosparam command="load" 
+                file="$(find bravo_ft_sensor)/config/safety_interrupt.yaml" 
+                ns="bravo"
+    />
+     
+    <node name="ft_safety_manager" 
+                pkg="bravo_ft_sensor" 
+                type="safety_reporter.py"
+                ns="bravo"
+                launch-prefix="xterm -hold -e"
+    /> 
+</launch>

@@ -3,12 +3,12 @@ ft_safety_interrupt:
   ft_topic: "filtered_force_torque"
 
   check_dirs: True
-  direction_max_allowable: [0,0,0,0,0,0] # N, N, N, N-m, N-m, N-m
+  direction_max_allowable: [15,15,15,15,15,15] # N, N, N, N-m, N-m, N-m
   
   check_mag: False
-  magnitude_max_allowable: [-1,-1] # N, N-m
+  magnitude_max_allowable: [10,10] # N, N-m
 
   # recovery direction will be converted to this frame  
-  direction_output_frame: "bravo_base_link" 
-
+  #direction_output_frame: "bravo_base_link" 
+  direction_output_frame: "bravo_ft_sensor_link"
 
