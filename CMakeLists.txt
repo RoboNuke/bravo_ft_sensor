@@ -51,11 +51,11 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
-# add_message_files(
-#   FILES
-#   Message1.msg
+add_message_files(
+   FILES
+   FT_Interrupt.msg
 #   Message2.msg
-# )
+)
 
 ## Generate services in the 'srv' folder
 add_service_files(
@@ -168,6 +168,7 @@ catkin_install_python(PROGRAMS
   scripts/ft_filter_node.py
   scripts/calibration_node.py
   scripts/ft_demo.py
+  scripts/safety_reporter.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
