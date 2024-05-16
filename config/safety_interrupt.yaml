@@ -9,6 +9,6 @@ ft_safety_interrupt:
   magnitude_max_allowable: [10,10] # N, N-m
 
   # recovery direction will be converted to this frame  
-  #direction_output_frame: "bravo_base_link" 
-  direction_output_frame: "bravo_ft_sensor_link"
+  direction_output_frame: "bravo_base_link" 
+  #direction_output_frame: "bravo_peg_link"
 

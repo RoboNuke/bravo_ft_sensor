@@ -2,8 +2,9 @@
 ft_demo:
   force_torque_topic: "/bravo/filtered_force_torque"
   ee_control_topic: "/bravo/servo_server/delta_twist_cmds"
-  ee_frame: "bravo_ft_sensor_link"
-
+  #ee_frame: "bravo_ft_sensor_link"
+  ee_frame: "bravo_peg_link"
+  
   gains: [-0.35,-0.35,0.35,-0.75,-0.75,1.5] 
   ignore_threshold: [10, 10, 10, 1.0, 1.0, 1.0]
   max_speeds: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
