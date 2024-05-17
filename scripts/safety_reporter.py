@@ -5,6 +5,7 @@ from bravo_ft_sensor.msg import FT_Interrupt
 from geometry_msgs.msg import Wrench, WrenchStamped, Twist
 import numpy as np
 import math 
+from math import fabs
 
 class FTSafetyReporter():
     def __init__(self):
@@ -37,13 +38,13 @@ class FTSafetyReporter():
         safe = True
         if self.check_mag:
             fmax = math.sqrt(wren[0] ** 2 + wren[1] **2 + wren[2] ** 2)
-            tmax = math.sqrt(wren[3] ** 2 + wren[4] ** 2 + wren[5] ** 2)
-            if fmax >= self.mag_max[0] or tmax >= self.mag_max[1]:
+            #tmax = math.sqrt(wren[3] ** 2 + wren[4] ** 2 + wren[5] ** 2)
+            if fmax >= self.mag_max[0]:# or tmax >= self.mag_max[1]:
                 safe = False
         
         if safe and self.check_dirs:
             for i in range(6):
-                if wren[i] >= self.dir_max[i]:
+                if fabs(wren[i]) >= self.dir_max[i]:
                     safe = False
                     break
 
@@ -51,21 +52,22 @@ class FTSafetyReporter():
         out_msg.is_safe = safe
         out_msg.sensor_reading = msg.wrench
         if not safe:
+            print("NOT SAFE", rospy.Time.now())
 
             # move wrench to recovery  frame
             tfWren = self.tfWrench(wren, msg.header.frame_id)
             
             # normalize wrench
             fTwist = tfWren[:3] / np.linalg.norm(wren[:3])
-            tTwist = tfWren[3:] / np.linalg.norm(wren[3:])
+            #tTwist = tfWren[3:] / np.linalg.norm(wren[3:])
 
-            # take negative
-            out_msg.recovery_direction.linear.x = -fTwist[0]
-            out_msg.recovery_direction.linear.y = -fTwist[1]
-            out_msg.recovery_direction.linear.z = -fTwist[2]
-            out_msg.recovery_direction.angular.x = -tTwist[0]
-            out_msg.recovery_direction.angular.y = -tTwist[1]
-            out_msg.recovery_direction.angular.z = -tTwist[2]
+            # note that the ft sensor recovery direction is the same as direction of the force
+            out_msg.recovery_direction.linear.x = fTwist[0]
+            out_msg.recovery_direction.linear.y = fTwist[1]
+            out_msg.recovery_direction.linear.z = fTwist[2]
+            #out_msg.recovery_direction.angular.x = tTwist[0]
+            #out_msg.recovery_direction.angular.y = tTwist[1]
+            #out_msg.recovery_direction.angular.z = tTwist[2]
 
         self.interrupt_pub.publish(out_msg)
 
