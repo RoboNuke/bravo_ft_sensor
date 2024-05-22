@@ -43,7 +43,7 @@ class FTSafetyReporter():
                 safe = False
         
         if safe and self.check_dirs:
-            for i in range(6):
+            for i in range(3):
                 if fabs(wren[i]) >= self.dir_max[i]:
                     safe = False
                     break

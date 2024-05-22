@@ -6,8 +6,11 @@
         <arg  name="with_trisect" value="false"/>
         <arg  name="start_rviz" value="true"/>
         <arg  name="with_base_hand" value="false"/>
-        <arg  name="with_rigid_peg" value="false"/>
+        <arg  name="with_rigid_peg" value="true"/>
+        <arg  name="peg_shape" value="circle"/>
+        <arg  name="peg_size" value="30"/>
         <arg  name="with_moveit_servo" value="true"/>
+        <arg  name="with_camera" value="true"/>
         <arg  name="simulated" value="false"/>
     </include>
 

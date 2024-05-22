@@ -37,7 +37,13 @@ class FTDemoController:
             return True, "Force Torque Demo Control Activated"
         else:
             # turn off
-            self.active = False
+            self.active = Falseout = TwistStamped()
+
+            out = TwistStamped()
+            out.twist = self.toTwist([0,0,0,0,0,0])
+            out.header.frame_id = self.ee_frame
+            out.header.stamp = rospy.Time.now()
+            self.twist_pub.publish(out)
             return True, "Force Torque Demo Control Deactivated"
 
     def toTwist(self, x):
