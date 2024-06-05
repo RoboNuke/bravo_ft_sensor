@@ -2,10 +2,10 @@ ft_safety_interrupt:
   interrupt_topic: "ft_interrupt"
   ft_topic: "filtered_force_torque"
 
-  check_dirs: True
+  check_dirs: false
   direction_max_allowable: [100,100,100,0,0,0] # N, N, N, N-m, N-m, N-m
   
-  check_mag: False
+  check_mag: false
   magnitude_max_allowable: [0,0] # N, N-m
 
   # recovery direction will be converted to this frame  

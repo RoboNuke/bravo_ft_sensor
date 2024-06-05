@@ -37,7 +37,7 @@ class FTDemoController:
             return True, "Force Torque Demo Control Activated"
         else:
             # turn off
-            self.active = Falseout = TwistStamped()
+            self.active = False
 
             out = TwistStamped()
             out.twist = self.toTwist([0,0,0,0,0,0])
